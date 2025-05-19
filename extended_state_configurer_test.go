@@ -32,7 +32,7 @@ func TestSubStateOf_CyclicHierarchy(t *testing.T) {
 	assert2.PanicsWithError(t, func(s string) bool {
 		return strings.Contains(s, "cycle detected")
 	}, func() {
-		m := machina.NewMachine[State, Trigger](s, func(newState State) {
+		m := machina.New[State, Trigger](s, func(newState State) {
 			s = newState
 		})
 
@@ -51,7 +51,7 @@ func TestSubStateOf_CyclicHierarchy(t *testing.T) {
 func TestSubStateOf_SuperstateAlreadyConfigured(t *testing.T) {
 	s := Stopped
 	assert.Panics(t, func() {
-		m := machina.NewMachine[State, Trigger](s, func(newState State) {
+		m := machina.New[State, Trigger](s, func(newState State) {
 			s = newState
 		})
 
@@ -62,7 +62,7 @@ func TestSubStateOf_SuperstateAlreadyConfigured(t *testing.T) {
 func TestSubStateOf_SubstateSameAsSuperstate(t *testing.T) {
 	s := Stopped
 	assert.Panics(t, func() {
-		m := machina.NewMachine[State, Trigger](s, func(newState State) {
+		m := machina.New[State, Trigger](s, func(newState State) {
 			s = newState
 		})
 

@@ -29,7 +29,7 @@ type machine[TState comparable, TTrigger comparable] struct {
 	onTransitionCompletedCallbacks []func(TransitionInfo[TState, TTrigger])
 }
 
-func NewMachine[TState comparable, TTrigger comparable](initialState TState, stateSetter func(newState TState)) IMachine[TState, TTrigger] {
+func New[TState comparable, TTrigger comparable](initialState TState, stateSetter func(newState TState)) IMachine[TState, TTrigger] {
 	return &machine[TState, TTrigger]{
 		lock:                &sync.RWMutex{},
 		currentState:        initialState,
