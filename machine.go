@@ -13,7 +13,6 @@ type IMachine[TState comparable, TTrigger comparable] interface {
 	SetRollbackOnFailure(bool)
 	OnTransitionStarted(func(TransitionInfo[TState, TTrigger]))
 	OnTransitionCompleted(func(TransitionInfo[TState, TTrigger]))
-	Visualize()
 }
 
 const DefaultMaxDepth = 10

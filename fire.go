@@ -55,7 +55,9 @@ func (m *machine[TState, TTrigger]) fire(trigger TTrigger, dryRun bool) error {
 			return m.onUnhandledTransitionCallback(m.currentState, trigger)
 		}
 
-		parentLoopSc, parentLoopScExists := m.statesConfig[*loopSc.parentState]
+		parentState := *loopSc.parentState
+
+		parentLoopSc, parentLoopScExists := m.statesConfig[parentState]
 		if !parentLoopScExists {
 			return m.onUnhandledTransitionCallback(m.currentState, trigger)
 		}
