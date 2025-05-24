@@ -1,6 +1,7 @@
 package machina
 
 import (
+	"io"
 	"sync"
 )
 
@@ -36,6 +37,10 @@ type StateMachine[TState comparable, TTrigger comparable] interface {
 
 	// SetOnUnhandledTransition registers a global callback that runs when no triggers are configured to current state
 	SetOnUnhandledTransition(f func(TState, TTrigger) error)
+
+	// GenerateDotGraph write a DOT graph to an io.Writer
+	// THIS IS EXPERIMENTAL
+	GenerateDotGraph(w io.Writer) error
 }
 
 const DefaultMaxDepth = 3
