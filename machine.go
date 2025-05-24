@@ -4,14 +4,32 @@ import (
 	"sync"
 )
 
-type IMachine[TState comparable, TTrigger comparable] interface {
-	Configure(TState) extendedStateConfigurer[TState, TTrigger]
+type StateMachine[TState comparable, TTrigger comparable] interface {
+	// Configure Configures triggers, transitions, entry/exit callbacks on `state`
+	Configure(state TState) extendedStateConfigurer[TState, TTrigger]
+
+	// CurrentState gets the current internal state of the state machine object
 	CurrentState() TState
-	Fire(TTrigger) error
-	CanFire(TTrigger) bool
+
+	// Fire Invokes a `trigger` on the state machine, optionally with a list of custom parameters
+	Fire(trigger TTrigger, params ...any) error
+
+	// CanFire returns a boolean to indicate if the state machine currently accepts invocation using `trigger` with a list of parameters
+	CanFire(trigger TTrigger, params ...any) bool
+
+	// SetMaxDepth setts the maximum depth of superstate-substate hierarchy
 	SetMaxDepth(int)
+
+	// SetRollbackOnFailure when set to `true` and when a panic occurs on `OnTransitionCompleted` or `OnEntry` callbacks, it tries to reset both
+	// the state machine`s internal state & the external state setter (if exists) back to its original state
 	SetRollbackOnFailure(bool)
+
+	// OnTransitionStarted registers a global callback that runs at the start of the transition
+	// can use multiple times to register multiple callbacks
 	OnTransitionStarted(func(TransitionInfo[TState, TTrigger]))
+
+	// OnTransitionCompleted registers a global callback that runs at the end of the transition
+	// can use multiple times to register multiple callbacks
 	OnTransitionCompleted(func(TransitionInfo[TState, TTrigger]))
 }
 
@@ -29,7 +47,8 @@ type machine[TState comparable, TTrigger comparable] struct {
 	onTransitionCompletedCallbacks []func(TransitionInfo[TState, TTrigger])
 }
 
-func New[TState comparable, TTrigger comparable](initialState TState, stateSetter func(newState TState)) IMachine[TState, TTrigger] {
+// New Instantiates a new state machine object
+func New[TState comparable, TTrigger comparable](initialState TState, stateSetter func(newState TState)) StateMachine[TState, TTrigger] {
 	return &machine[TState, TTrigger]{
 		lock:                &sync.RWMutex{},
 		currentState:        initialState,

@@ -6,7 +6,7 @@ import (
 )
 
 type extendedStateConfigurer[TState comparable, TTrigger comparable] interface {
-	iStateConfigurer[TState, TTrigger]
+	StateConfigurer[TState, TTrigger]
 	SubstateOf(TState) extendedStateConfigurer[TState, TTrigger]
 	OnEntry(func(TransitionInfo[TState, TTrigger])) extendedStateConfigurer[TState, TTrigger]
 	OnExit(func(TransitionInfo[TState, TTrigger])) extendedStateConfigurer[TState, TTrigger]

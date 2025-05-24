@@ -2,9 +2,12 @@ package machina
 
 import "errors"
 
-type iStateConfigurer[TState comparable, TTrigger comparable] interface {
-	Permit(TTrigger, TState) iStateConfigurer[TState, TTrigger]
-	PermitIf(TTrigger, TState, ...guard[TState, TTrigger]) iStateConfigurer[TState, TTrigger]
+type StateConfigurer[TState comparable, TTrigger comparable] interface {
+	// Permit allows the state machine to transition to `dest` state when invoked using `trigger`
+	Permit(trigger TTrigger, dest TState) StateConfigurer[TState, TTrigger]
+
+	// PermitIf allows the state machine to transition to `dest` state when invoked using `trigger` and when all guards are met
+	PermitIf(trigger TTrigger, dest TState, guards ...guard[TState, TTrigger]) StateConfigurer[TState, TTrigger]
 }
 
 type stateConfigurer[TState comparable, TTrigger comparable] struct {
@@ -33,7 +36,7 @@ func (m *machine[TState, TTrigger]) Configure(state TState) extendedStateConfigu
 	return sc
 }
 
-func (s *stateConfigurer[TState, TTrigger]) Permit(trigger TTrigger, state TState) iStateConfigurer[TState, TTrigger] {
+func (s *stateConfigurer[TState, TTrigger]) Permit(trigger TTrigger, state TState) StateConfigurer[TState, TTrigger] {
 	s.m.lock.Lock()
 	defer s.m.lock.Unlock()
 
@@ -44,7 +47,7 @@ func (s *stateConfigurer[TState, TTrigger]) Permit(trigger TTrigger, state TStat
 	return s
 }
 
-func (s *stateConfigurer[TState, TTrigger]) PermitIf(trigger TTrigger, state TState, guards ...guard[TState, TTrigger]) iStateConfigurer[TState, TTrigger] {
+func (s *stateConfigurer[TState, TTrigger]) PermitIf(trigger TTrigger, state TState, guards ...guard[TState, TTrigger]) StateConfigurer[TState, TTrigger] {
 	s.m.lock.Lock()
 	defer s.m.lock.Unlock()
 

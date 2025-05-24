@@ -1,14 +1,14 @@
 package machina
 
-func (m *machine[TState, TTrigger]) Fire(trigger TTrigger) error {
-	return m.fire(trigger, false)
+func (m *machine[TState, TTrigger]) Fire(trigger TTrigger, params ...any) error {
+	return m.fire(trigger, false, params)
 }
 
-func (m *machine[TState, TTrigger]) CanFire(trigger TTrigger) bool {
-	return m.fire(trigger, true) == nil
+func (m *machine[TState, TTrigger]) CanFire(trigger TTrigger, params ...any) bool {
+	return m.fire(trigger, true, params) == nil
 }
 
-func (m *machine[TState, TTrigger]) fire(trigger TTrigger, dryRun bool) error {
+func (m *machine[TState, TTrigger]) fire(trigger TTrigger, dryRun bool, params []any) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -41,7 +41,7 @@ func (m *machine[TState, TTrigger]) fire(trigger TTrigger, dryRun bool) error {
 			return ErrMaxDepthReached
 		}
 
-		transitionFound, err := m.tryFire(trigger, loopSc, dryRun)
+		transitionFound, err := m.tryFire(trigger, loopSc, dryRun, params)
 		if err == nil {
 			return nil
 		}
@@ -67,7 +67,7 @@ func (m *machine[TState, TTrigger]) fire(trigger TTrigger, dryRun bool) error {
 	}
 }
 
-func (m *machine[TState, TTrigger]) tryFire(trigger TTrigger, sc *stateConfig[TState, TTrigger], dryRun bool) (bool, error) {
+func (m *machine[TState, TTrigger]) tryFire(trigger TTrigger, sc *stateConfig[TState, TTrigger], dryRun bool, params []any) (bool, error) {
 	var transitionInfo TransitionInfo[TState, TTrigger]
 
 	possibleTransitions, possibleTransitionExists := sc.transitions[trigger]
@@ -82,6 +82,7 @@ func (m *machine[TState, TTrigger]) tryFire(trigger TTrigger, sc *stateConfig[TS
 			FromState: m.currentState,
 			ToState:   possibleTransition.toState,
 			Trigger:   trigger,
+			Params:    params,
 		}
 
 		guardError := m.evalGuards(transitionInfo, possibleTransition.guards)
