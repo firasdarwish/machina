@@ -33,8 +33,14 @@ func main() {
 	}).Permit(Activate, On)
 
 	log.Println(currentState)
-	m.Fire(Activate)
+	err := m.Fire(Activate)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	log.Println(currentState)
-	m.Fire(Deactivate)
+	err = m.Fire(Deactivate)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	log.Println(currentState)
 }
