@@ -18,10 +18,12 @@ type StateMachine[TState comparable, TTrigger comparable] interface {
 	CanFire(trigger TTrigger, params ...any) bool
 
 	// SetMaxDepth setts the maximum depth of superstate-substate hierarchy
+	// Default: 3
 	SetMaxDepth(int)
 
 	// SetRollbackOnFailure when set to `true` and when a panic occurs on `OnTransitionCompleted` or `OnEntry` callbacks, it tries to reset both
 	// the state machine`s internal state & the external state setter (if exists) back to its original state
+	// Default: true
 	SetRollbackOnFailure(bool)
 
 	// OnTransitionStarted registers a global callback that runs at the start of the transition
@@ -36,7 +38,7 @@ type StateMachine[TState comparable, TTrigger comparable] interface {
 	SetOnUnhandledTransition(f func(TState, TTrigger) error)
 }
 
-const DefaultMaxDepth = 10
+const DefaultMaxDepth = 3
 
 type machine[TState comparable, TTrigger comparable] struct {
 	lock                           *sync.RWMutex
@@ -58,6 +60,7 @@ func New[TState comparable, TTrigger comparable](initialState TState, stateSette
 		statesConfig:        map[TState]*stateConfig[TState, TTrigger]{},
 		externalStateSetter: &stateSetter,
 		maxDepth:            DefaultMaxDepth,
+		rollbackOnFailure:   true,
 		onUnhandledTransitionCallback: func(state TState, trigger TTrigger) error {
 			return ErrInvalidTransition
 		},
