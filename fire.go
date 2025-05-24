@@ -68,7 +68,7 @@ func (m *machine[TState, TTrigger]) fire(trigger TTrigger, dryRun bool, params [
 }
 
 func (m *machine[TState, TTrigger]) tryFire(trigger TTrigger, sc *stateConfig[TState, TTrigger], dryRun bool, params []any) (bool, error) {
-	var transitionInfo TransitionInfo[TState, TTrigger]
+	var tInfo *transitionInfo[TState, TTrigger]
 
 	possibleTransitions, possibleTransitionExists := sc.transitions[trigger]
 	if !possibleTransitionExists {
@@ -78,14 +78,15 @@ func (m *machine[TState, TTrigger]) tryFire(trigger TTrigger, sc *stateConfig[TS
 	var guardErrors []error
 
 	for _, possibleTransition := range possibleTransitions {
-		transitionInfo = TransitionInfo[TState, TTrigger]{
-			FromState: m.currentState,
-			ToState:   possibleTransition.toState,
-			Trigger:   trigger,
-			Params:    params,
+
+		tInfo = &transitionInfo[TState, TTrigger]{
+			fromState: m.currentState,
+			toState:   possibleTransition.toState,
+			trigger:   trigger,
+			params:    params,
 		}
 
-		guardError := m.evalGuards(transitionInfo, possibleTransition.guards)
+		guardError := m.evalGuards(tInfo, possibleTransition.guards)
 		if guardError != nil {
 			guardErrors = append(guardErrors, guardError)
 			continue
@@ -96,11 +97,11 @@ func (m *machine[TState, TTrigger]) tryFire(trigger TTrigger, sc *stateConfig[TS
 
 		if !dryRun {
 			for _, callback := range m.onTransitionStartCallbacks {
-				callback(transitionInfo)
+				callback(tInfo)
 			}
 
 			for _, onExit := range sc.onExits {
-				onExit(transitionInfo)
+				onExit(tInfo)
 			}
 
 			m.unsafeSetState(dest)
@@ -108,12 +109,12 @@ func (m *machine[TState, TTrigger]) tryFire(trigger TTrigger, sc *stateConfig[TS
 			destSc, destScExists := m.statesConfig[dest]
 			if destScExists {
 				for _, onEntry := range destSc.onEntries {
-					onEntry(transitionInfo)
+					onEntry(tInfo)
 				}
 			}
 
 			for _, callback := range m.onTransitionCompletedCallbacks {
-				callback(transitionInfo)
+				callback(tInfo)
 			}
 		}
 
@@ -123,9 +124,9 @@ func (m *machine[TState, TTrigger]) tryFire(trigger TTrigger, sc *stateConfig[TS
 	return false, m.onUnhandledTransitionCallback(m.currentState, trigger)
 }
 
-func (m *machine[TState, TTrigger]) evalGuards(transitionInfo TransitionInfo[TState, TTrigger], guards []guard[TState, TTrigger]) error {
-	for _, guard := range guards {
-		result := guard(transitionInfo)
+func (m *machine[TState, TTrigger]) evalGuards(transitionInfo Transition[TState, TTrigger], guards []guard[TState, TTrigger]) error {
+	for _, g := range guards {
+		result := g(transitionInfo)
 		if result != nil {
 			return result
 		}

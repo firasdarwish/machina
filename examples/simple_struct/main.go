@@ -25,9 +25,11 @@ func main() {
 		currentState = newState
 	})
 
-	m.Configure(On).Permit(Deactivate, Off)
-	m.Configure(Off).OnEntry(func(t machina.TransitionInfo[State, Trigger]) {
-		log.Println(t.Params)
+	m.Configure(On).PermitIf(Deactivate, Off, func(transition machina.Transition[State, Trigger]) error {
+		return nil
+	})
+	m.Configure(Off).OnEntry(func(t machina.Transition[State, Trigger]) {
+		log.Println(t.Params())
 	}).Permit(Activate, On)
 
 	log.Println(currentState)

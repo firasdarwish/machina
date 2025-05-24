@@ -26,11 +26,14 @@ type StateMachine[TState comparable, TTrigger comparable] interface {
 
 	// OnTransitionStarted registers a global callback that runs at the start of the transition
 	// can use multiple times to register multiple callbacks
-	OnTransitionStarted(func(TransitionInfo[TState, TTrigger]))
+	OnTransitionStarted(func(Transition[TState, TTrigger]))
 
 	// OnTransitionCompleted registers a global callback that runs at the end of the transition
 	// can use multiple times to register multiple callbacks
-	OnTransitionCompleted(func(TransitionInfo[TState, TTrigger]))
+	OnTransitionCompleted(func(Transition[TState, TTrigger]))
+
+	// SetOnUnhandledTransition registers a global callback that runs when no triggers are configured to current state
+	SetOnUnhandledTransition(f func(TState, TTrigger) error)
 }
 
 const DefaultMaxDepth = 10
@@ -43,8 +46,8 @@ type machine[TState comparable, TTrigger comparable] struct {
 	maxDepth                       int
 	rollbackOnFailure              bool
 	onUnhandledTransitionCallback  func(TState, TTrigger) error
-	onTransitionStartCallbacks     []func(TransitionInfo[TState, TTrigger])
-	onTransitionCompletedCallbacks []func(TransitionInfo[TState, TTrigger])
+	onTransitionStartCallbacks     []func(Transition[TState, TTrigger])
+	onTransitionCompletedCallbacks []func(Transition[TState, TTrigger])
 }
 
 // New Instantiates a new state machine object
@@ -58,8 +61,8 @@ func New[TState comparable, TTrigger comparable](initialState TState, stateSette
 		onUnhandledTransitionCallback: func(state TState, trigger TTrigger) error {
 			return ErrInvalidTransition
 		},
-		onTransitionStartCallbacks:     make([]func(TransitionInfo[TState, TTrigger]), 0),
-		onTransitionCompletedCallbacks: make([]func(TransitionInfo[TState, TTrigger]), 0),
+		onTransitionStartCallbacks:     make([]func(Transition[TState, TTrigger]), 0),
+		onTransitionCompletedCallbacks: make([]func(Transition[TState, TTrigger]), 0),
 	}
 }
 
@@ -89,13 +92,13 @@ func (m *machine[TState, TTrigger]) SetOnUnhandledTransition(f func(TState, TTri
 	m.onUnhandledTransitionCallback = f
 }
 
-func (m *machine[TState, TTrigger]) OnTransitionStarted(f func(TransitionInfo[TState, TTrigger])) {
+func (m *machine[TState, TTrigger]) OnTransitionStarted(f func(Transition[TState, TTrigger])) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	m.onTransitionStartCallbacks = append(m.onTransitionStartCallbacks, f)
 }
 
-func (m *machine[TState, TTrigger]) OnTransitionCompleted(f func(TransitionInfo[TState, TTrigger])) {
+func (m *machine[TState, TTrigger]) OnTransitionCompleted(f func(Transition[TState, TTrigger])) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	m.onTransitionCompletedCallbacks = append(m.onTransitionCompletedCallbacks, f)

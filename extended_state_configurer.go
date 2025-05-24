@@ -8,8 +8,8 @@ import (
 type extendedStateConfigurer[TState comparable, TTrigger comparable] interface {
 	StateConfigurer[TState, TTrigger]
 	SubstateOf(TState) extendedStateConfigurer[TState, TTrigger]
-	OnEntry(func(TransitionInfo[TState, TTrigger])) extendedStateConfigurer[TState, TTrigger]
-	OnExit(func(TransitionInfo[TState, TTrigger])) extendedStateConfigurer[TState, TTrigger]
+	OnEntry(func(Transition[TState, TTrigger])) extendedStateConfigurer[TState, TTrigger]
+	OnExit(func(Transition[TState, TTrigger])) extendedStateConfigurer[TState, TTrigger]
 }
 
 func (s *stateConfigurer[TState, TTrigger]) SubstateOf(parentState TState) extendedStateConfigurer[TState, TTrigger] {
@@ -54,7 +54,7 @@ func (s *stateConfigurer[TState, TTrigger]) SubstateOf(parentState TState) exten
 	return s
 }
 
-func (s *stateConfigurer[TState, TTrigger]) OnEntry(f func(TransitionInfo[TState, TTrigger])) extendedStateConfigurer[TState, TTrigger] {
+func (s *stateConfigurer[TState, TTrigger]) OnEntry(f func(Transition[TState, TTrigger])) extendedStateConfigurer[TState, TTrigger] {
 	s.m.lock.Lock()
 	defer s.m.lock.Unlock()
 
@@ -62,7 +62,7 @@ func (s *stateConfigurer[TState, TTrigger]) OnEntry(f func(TransitionInfo[TState
 	return s
 }
 
-func (s *stateConfigurer[TState, TTrigger]) OnExit(f func(TransitionInfo[TState, TTrigger])) extendedStateConfigurer[TState, TTrigger] {
+func (s *stateConfigurer[TState, TTrigger]) OnExit(f func(Transition[TState, TTrigger])) extendedStateConfigurer[TState, TTrigger] {
 	s.m.lock.Lock()
 	defer s.m.lock.Unlock()
 

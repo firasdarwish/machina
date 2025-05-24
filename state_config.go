@@ -3,8 +3,8 @@ package machina
 type stateConfig[TState comparable, TTrigger comparable] struct {
 	parentState *TState
 	transitions map[TTrigger][]transition[TState, TTrigger]
-	onEntries   []func(TransitionInfo[TState, TTrigger])
-	onExits     []func(TransitionInfo[TState, TTrigger])
+	onEntries   []func(Transition[TState, TTrigger])
+	onExits     []func(Transition[TState, TTrigger])
 }
 
 func (sc *stateConfig[TState, TTrigger]) addTransition(trigger TTrigger, t transition[TState, TTrigger]) {
@@ -21,11 +21,11 @@ func (sc *stateConfig[TState, TTrigger]) addTransition(trigger TTrigger, t trans
 	sc.transitions[trigger] = append(sc.transitions[trigger], t)
 }
 
-func (sc *stateConfig[TState, TTrigger]) addOnEntry(ti func(TransitionInfo[TState, TTrigger])) {
+func (sc *stateConfig[TState, TTrigger]) addOnEntry(ti func(Transition[TState, TTrigger])) {
 	sc.onEntries = append(sc.onEntries, ti)
 }
 
-func (sc *stateConfig[TState, TTrigger]) addOnExit(ti func(TransitionInfo[TState, TTrigger])) {
+func (sc *stateConfig[TState, TTrigger]) addOnExit(ti func(Transition[TState, TTrigger])) {
 	sc.onExits = append(sc.onExits, ti)
 }
 
